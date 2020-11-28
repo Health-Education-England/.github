@@ -1,7 +1,7 @@
 {
   "name": "Maven PR Workflow",
   "description": "A workflow template for performing PR checks for maven projects.",
-  "iconName": "example-icon",
+  "iconName": "maven",
   "categories": [
     "Java"
   ],
