@@ -6,7 +6,8 @@ on:
       - $default-branch
 
 jobs:
-  call-workflow:
+  analysis:
+    name: Analyse PR
     uses: health-education-england/.github/.github/workflows/pr-analysis-gradle.yml@main
     secrets:
       sonar-token: ${{ secrets.SONAR_TOKEN }}
