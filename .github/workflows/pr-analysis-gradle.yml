@@ -1,0 +1,74 @@
+name: PR Analysis
+
+permissions:
+  pull-requests: write
+
+on:
+  workflow_call:
+    secrets:
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs :
+  validate-wrapper:
+    name: Validate Gradle wrapper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Gradle wrapper validation
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+  analyse:
+    name: Analyse PR
+    needs: validate-wrapper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.1
+        with:
+          cache: gradle
+          distribution: adopt
+          java-version: 11
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Get modified files
+        id: changed-files
+        uses: jitterbit/get-changed-files@v1
+
+      - name: Check modified files
+        id: check-files
+        run: |
+          do_analysis=false
+          for changed_file in ${{ steps.changed-files.outputs.all }}; do
+            if [[ $changed_file =~ ^(.*\/|)src\/.+$ ]]; then
+              do_analysis=true
+              break
+            fi
+          done
+          echo ::set-output name=do-analysis::$do_analysis
+
+      - name: Notify skipped analysis
+        if: steps.check-files.outputs.do-analysis == 'false'
+        uses: mshick/add-pr-comment@v1
+        with:
+          allow-repeats: true
+          repo-token: ${{ github.token }}
+          message: |
+            Quality analysis was skipped as no source changes were detected.
+
+      - name: Analyse quality
+        if: steps.check-files.outputs.do-analysis == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+        run: ./gradlew sonarqube

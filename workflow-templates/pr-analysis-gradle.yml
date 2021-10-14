@@ -1,0 +1,12 @@
+name: PR Analysis
+
+on:
+  pull_request:
+    branches:
+      - $default-branch
+
+jobs:
+  call-workflow:
+    uses: health-education-england/.github/.github/workflows/pr-analysis-gradle.yml@main
+    secrets:
+      sonar-token: ${{ secrets.SONAR_TOKEN }}
