@@ -1,0 +1,11 @@
+{
+  "name": "PR Analysis - Maven",
+  "description": "A workflow template to perform PR analysis for Maven projects.",
+  "iconName": "maven",
+  "categories": [
+    "Java"
+  ],
+  "filePatterns": [
+    "^pom.xml$"
+  ]
+}
