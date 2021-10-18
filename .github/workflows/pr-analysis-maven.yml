@@ -1,0 +1,99 @@
+name: PR Analysis
+
+permissions:
+  pull-requests: write
+
+on:
+  workflow_call:
+    secrets:
+      codeartifact-username:
+        description: The username to access the codeartifact repository.
+        required: false
+      codeartifact-password:
+        description: The password to access the codeartifact repository.
+        required: false
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs :
+  analyse:
+    name: Analyse PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.1
+        with:
+          cache: maven
+          distribution: adopt
+          java-version: 11
+
+      - name: Check for codeartifact secrets
+        id: check-codeartifact-secrets
+        env:
+          USERNAME: ${{ secrets.codeartifact-username }}
+          PASSWORD: ${{ secrets.codeartifact-password }}
+        run: |
+          if [[ $USERNAME != "" && $PASSWORD != "" ]]; then
+            echo ::set-output name=do-codeartifact-login::true
+          else
+            echo ::set-output name=do-codeartifact-login::false
+          fi
+
+      - name: Configure AWS credentials
+        if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.codeartifact-username }}
+          aws-secret-access-key: ${{ secrets.codeartifact-password }}
+          aws-region: eu-west-1
+
+      - name: Add CodeArtifact env var
+        if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
+        run: echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text)" >> $GITHUB_ENV
+
+      - name: maven-settings-xml-action
+        if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
+        uses: whelk-io/maven-settings-xml-action@v18
+        with:
+          servers: '[{ "id": "hee--Health-Education-England", "username": "aws", "password": "${env.CODEARTIFACT_AUTH_TOKEN}" }]'
+          repositories: '[{ "id": "hee--Health-Education-England", "url": "https://hee-430723991443.d.codeartifact.eu-west-1.amazonaws.com/maven/Health-Education-England/" }]'
+
+      - name: Build
+        run: mvn install
+
+      - name: Get modified files
+        id: changed-files
+        uses: jitterbit/get-changed-files@v1
+
+      - name: Check modified files
+        id: check-files
+        run: |
+          do_analysis=false
+          for changed_file in ${{ steps.changed-files.outputs.all }}; do
+            if [[ $changed_file =~ ^(.*\/|)src\/.+$ ]]; then
+              do_analysis=true
+              break
+            fi
+          done
+          echo ::set-output name=do-analysis::$do_analysis
+
+      - name: Notify skipped analysis
+        if: steps.check-files.outputs.do-analysis == 'false'
+        uses: mshick/add-pr-comment@v1
+        with:
+          allow-repeats: true
+          repo-token: ${{ github.token }}
+          message: |
+            Quality analysis was skipped as no source changes were detected.
+
+      - name: Analyse quality
+        if: steps.check-files.outputs.do-analysis == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+        run: mvn sonar:sonar
