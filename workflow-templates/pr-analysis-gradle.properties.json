@@ -1,0 +1,11 @@
+{
+  "name": "PR Analysis - Gradle",
+  "description": "A workflow template to perform PR analysis for Gradle projects.",
+  "iconName": "gradle",
+  "categories": [
+    "Java"
+  ],
+  "filePatterns": [
+    "^build.gradle$"
+  ]
+}
