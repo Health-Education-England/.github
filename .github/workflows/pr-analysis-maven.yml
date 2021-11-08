@@ -54,7 +54,10 @@ jobs :
 
       - name: Add CodeArtifact env var
         if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
-        run: echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text)" >> $GITHUB_ENV
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
+          echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
 
       - name: maven-settings-xml-action
         if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
