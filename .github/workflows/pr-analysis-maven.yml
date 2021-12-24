@@ -67,7 +67,7 @@ jobs :
           repositories: '[{ "id": "hee--Health-Education-England", "url": "https://hee-430723991443.d.codeartifact.eu-west-1.amazonaws.com/maven/Health-Education-England/" }]'
 
       - name: Build
-        run: mvn install
+        run: mvn --batch-mode install
 
       - name: Get modified files
         id: changed-files
@@ -99,4 +99,4 @@ jobs :
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.sonar-token }}
-        run: mvn sonar:sonar
+        run: mvn --batch-mode sonar:sonar
