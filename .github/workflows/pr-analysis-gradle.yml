@@ -41,7 +41,7 @@ jobs :
         uses: actions/setup-java@v2.3.1
         with:
           cache: gradle
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Check for codeartifact secrets
