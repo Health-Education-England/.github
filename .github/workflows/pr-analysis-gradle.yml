@@ -42,7 +42,7 @@ jobs :
         with:
           cache: gradle
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Check for codeartifact secrets
         id: check-codeartifact-secrets
