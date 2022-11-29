@@ -1,0 +1,11 @@
+{
+  "name": "CI/CD - Gradle",
+  "description": "A workflow template to perform CI/CD for Gradle projects.",
+  "iconName": "gradle",
+  "categories": [
+    "Java"
+  ],
+  "filePatterns": [
+    "^build.gradle$"
+  ]
+}

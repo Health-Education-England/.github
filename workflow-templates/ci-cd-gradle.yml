@@ -1,0 +1,17 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - $default-branch
+
+jobs:
+  ci-cd:
+    name: Build and deploy
+    uses: health-education-england/.github/.github/workflows/ci-cd-gradle.yml@main
+    secrets:
+      codeartifact-username: ${{ secrets.AWS_MAVEN_USERNAME }}
+      codeartifact-password: ${{ secrets.AWS_MAVEN_PASSWORD }}
+      ecr-username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      ecr-password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      sonar-token: ${{ secrets.SONAR_TOKEN }}
