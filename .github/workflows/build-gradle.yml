@@ -1,0 +1,100 @@
+name: Build
+
+on:
+  workflow_call:
+    secrets:
+      codeartifact-username:
+        description: The username to access the codeartifact repository.
+        required: false
+      codeartifact-password:
+        description: The password to access the codeartifact repository.
+        required: false
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs :
+  validate-wrapper:
+    name: Validate Gradle wrapper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Gradle wrapper validation
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+  build:
+    name: Build
+    needs: validate-wrapper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.1
+        with:
+          cache: gradle
+          distribution: temurin
+          java-version: 17
+
+      - name: Check for codeartifact secrets
+        id: check-codeartifact-secrets
+        env:
+          USERNAME: ${{ secrets.codeartifact-username }}
+          PASSWORD: ${{ secrets.codeartifact-password }}
+        run: |
+          if [[ $USERNAME != "" && $PASSWORD != "" ]]; then
+            echo ::set-output name=do-codeartifact-login::true
+          else
+            echo ::set-output name=do-codeartifact-login::false
+          fi
+
+      - name: Configure AWS credentials
+        if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.codeartifact-username }}
+          aws-secret-access-key: ${{ secrets.codeartifact-password }}
+          aws-region: eu-west-1
+
+      - name: Add CodeArtifact env var
+        if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
+          echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Analyse quality
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+        run: ./gradlew sonarqube
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ github.event.repository.name }}
+        run: |
+          ./gradlew bootBuildImage --imageName=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY

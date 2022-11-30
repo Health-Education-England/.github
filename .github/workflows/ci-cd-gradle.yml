@@ -1,0 +1,54 @@
+name: CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      cluster-prefix:
+        description: The prefix of the ECS cluster to target for deployment.
+        required: true
+        type: string
+    secrets:
+      codeartifact-username:
+        description: The username to access the codeartifact repository.
+        required: false
+      codeartifact-password:
+        description: The password to access the codeartifact repository.
+        required: false
+      ecr-username:
+        description: The username to access the elastic container registry.
+        required: true
+      ecr-password:
+        description: The username to access the elastic container registry.
+        required: true
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs :
+  build:
+    uses: ./.github/workflows/build-gradle.yml
+    secrets:
+      sonar-token: ${{ secrets.sonar-token }}
+      codeartifact-username: ${{ secrets.codeartifact-username }}
+      codeartifact-password: ${{ secrets.codeartifact-password }}
+
+
+  deploy-preprod:
+    needs: build
+    uses: ./.github/workflows/deploy.yml
+    with:
+      cluster-prefix: ${{ inputs.cluster-prefix }}
+      environment: preprod
+    secrets:
+      ecr-username: ${{ secrets.ecr-username }}
+      ecr-password: ${{ secrets.ecr-password }}
+
+  deploy-prod:
+    needs: deploy-preprod
+    uses: ./.github/workflows/deploy.yml
+    with:
+      cluster-prefix: ${{ inputs.cluster-prefix }}
+      environment: prod
+    secrets:
+      ecr-username: ${{ secrets.ecr-username }}
+      ecr-password: ${{ secrets.ecr-password }}
