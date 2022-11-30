@@ -28,9 +28,11 @@ jobs :
   build:
     uses: ./.github/workflows/build-gradle.yml
     secrets:
-      sonar-token: ${{ secrets.sonar-token }}
       codeartifact-username: ${{ secrets.codeartifact-username }}
       codeartifact-password: ${{ secrets.codeartifact-password }}
+      ecr-username: ${{ secrets.ecr-username }}
+      ecr-password: ${{ secrets.ecr-password }}
+      sonar-token: ${{ secrets.sonar-token }}
 
 
   deploy-preprod:

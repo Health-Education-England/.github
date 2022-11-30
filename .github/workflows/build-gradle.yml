@@ -9,6 +9,12 @@ on:
       codeartifact-password:
         description: The password to access the codeartifact repository.
         required: false
+      ecr-username:
+        description: The username to access the elastic container registry.
+        required: true
+      ecr-password:
+        description: The username to access the elastic container registry.
+        required: true
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
@@ -82,8 +88,8 @@ jobs :
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.ecr-username }}
+          aws-secret-access-key: ${{ secrets.ecr-password }}
           aws-region: eu-west-2
 
       - name: Log in to Amazon ECR
