@@ -94,7 +94,7 @@ jobs :
 
       - name: Notify skipped analysis
         if: steps.check-files.outputs.do-analysis == 'false'
-        uses: mshick/add-pr-comment@v1
+        uses: mshick/add-pr-comment@v2
         with:
           allow-repeats: true
           repo-token: ${{ github.token }}
