@@ -11,6 +11,11 @@ on:
         description: The environment to target for deployment.
         required: true
         type: string
+      service-name:
+        description: The name of the service being deployed, defaults to repository name.
+        required: false
+        default: ${{ github.event.repository.name }}
+        type: string
     secrets:
       ecr-username:
         description: The username to access the elastic container registry.
@@ -21,7 +26,7 @@ on:
 
 jobs :
   deploy:
-    name: Deploy to ${{ inputs.environment }}
+    name: Deploy to ${{ inputs.cluster-prefix }} ${{ inputs.environment }}
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
@@ -30,7 +35,7 @@ jobs :
         uses: actions/checkout@v3
 
       - name: Create task definition
-        run: sed 's/${environment}/${{ inputs.environment }}/g' .aws/task-definition-template.json > ${{ runner.temp }}/task-definition.json
+        run: sed -e 's/${environment}/${{ inputs.environment }}/g' -e 's/${service-name}/${{ inputs.service-name }}/g' .aws/task-definition-template.json > ${{ runner.temp }}/task-definition.json
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -48,13 +53,13 @@ jobs :
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ runner.temp }}/task-definition.json
-          container-name: ${{ github.event.repository.name }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ github.event.repository.name }}:${{ github.sha }}
+          container-name: ${{ inputs.service-name }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service-name }}:${{ github.sha }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ github.event.repository.name }}
+          service: ${{ inputs.service-name }}
           cluster: ${{ inputs.cluster-prefix }}-${{ inputs.environment }}
           wait-for-service-stability: true
