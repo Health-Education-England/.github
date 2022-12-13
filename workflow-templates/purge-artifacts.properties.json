@@ -1,5 +1,0 @@
-{
-  "name": "Purge Artifacts",
-  "description": "A workflow template for scheduled purging of artifacts.",
-  "iconName": "trash"
-}
