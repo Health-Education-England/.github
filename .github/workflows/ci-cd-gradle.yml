@@ -7,6 +7,11 @@ on:
         description: The prefix of the ECS cluster to target for deployment.
         required: true
         type: string
+      service-name:
+        description: The name of the service being deployed, defaults to repository name.
+        required: false
+        default: ${{ github.event.repository.name }}
+        type: string
     secrets:
       codeartifact-username:
         description: The username to access the codeartifact repository.
@@ -41,6 +46,7 @@ jobs :
     with:
       cluster-prefix: ${{ inputs.cluster-prefix }}
       environment: preprod
+      service-name: ${{ inputs.service-name}}
     secrets:
       ecr-username: ${{ secrets.ecr-username }}
       ecr-password: ${{ secrets.ecr-password }}
@@ -51,6 +57,7 @@ jobs :
     with:
       cluster-prefix: ${{ inputs.cluster-prefix }}
       environment: prod
+      service-name: ${{ inputs.service-name}}
     secrets:
       ecr-username: ${{ secrets.ecr-username }}
       ecr-password: ${{ secrets.ecr-password }}
