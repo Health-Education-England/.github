@@ -2,6 +2,7 @@ name: PR Analysis
 
 permissions:
   pull-requests: write
+  contents: read
 
 on:
   workflow_call:
@@ -16,7 +17,7 @@ on:
         description: A token allowing access to SonarCloud.
         required: true
 
-jobs :
+jobs:
   validate-wrapper:
     name: Validate Gradle wrapper
     runs-on: ubuntu-latest
