@@ -35,10 +35,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Determine Submodules
+        id: check-submodules
+        run: |
+          if [ -f .gitmodules ]; then
+            echo "::set-output name=has_submodules::true"
+          else
+            echo "::set-output name=has_submodules::false"
+          fi
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
+        env:
+          GIT_TOKEN: ${{ secrets.GH_REPOS_ALL_READ }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0
