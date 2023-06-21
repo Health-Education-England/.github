@@ -39,9 +39,9 @@ jobs:
         id: check-submodules
         run: |
           if [ -f .gitmodules ]; then
-            echo "::set-output name=has_submodules::true"
+            echo "has_submodules=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::set-output name=has_submodules::false"
+            echo "has_submodules=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout
