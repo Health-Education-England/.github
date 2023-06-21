@@ -50,7 +50,7 @@ jobs:
           fetch-depth: 0
           submodules: ${{ steps.check-submodules.outputs.has_submodules }}
         env:
-          GIT_TOKEN: ${{ secrets.GH_REPOS_ALL_READ }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0

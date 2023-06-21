@@ -37,13 +37,22 @@ jobs :
     runs-on: ubuntu-latest
 
     steps:
+      - name: Determine Submodules
+        id: check-submodules
+        run: |
+          if [ -f .gitmodules ]; then
+            echo "has_submodules=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_submodules=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          submodules: ${{ if github.repository_has_submodules == 'true' }}recursive${{ else }}false${{ endif }}
+          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
         env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0
