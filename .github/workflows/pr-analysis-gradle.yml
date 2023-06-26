@@ -7,6 +7,9 @@ permissions:
 on:
   workflow_call:
     secrets:
+      checkout-token:
+        description: The token used for performing checkout.
+        required: false
       codeartifact-username:
         description: The username to access the codeartifact repository.
         required: false
@@ -63,7 +66,7 @@ jobs:
 #          repo-token: ${{ secrets.GITHUB_TOKEN }}
           #run: git submodule update --init --recursive
           submodules: recursive
-          token: ${{ secrets.JAY_PAT_TOKEN_TEST_3 }}
+          token: ${{ secrets.checkout-token }}
 #      - name: Configure Git
 #        run: |
 #          git config user.name "jayanta2018"
