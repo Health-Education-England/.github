@@ -40,14 +40,14 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout for determining submodules
         uses: actions/checkout@v3
 
       - name: Determine Submodules
         id: check-submodules
         run: |
           if [ -f .gitmodules ]; then
-            echo "has_submodules=true" >> $GITHUB_OUTPUT
+            echo "has_submodules=recursive" >> $GITHUB_OUTPUT
           else
             echo "has_submodules=false" >> $GITHUB_OUTPUT
           fi
@@ -65,7 +65,7 @@ jobs:
 #          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
 #          repo-token: ${{ secrets.GITHUB_TOKEN }}
           #run: git submodule update --init --recursive
-          submodules: recursive
+          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
           token: ${{ secrets.checkout-token }}
 #      - name: Configure Git
 #        run: |
