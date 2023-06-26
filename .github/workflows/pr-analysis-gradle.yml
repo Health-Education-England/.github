@@ -63,8 +63,7 @@ jobs:
 #          repo-token: ${{ secrets.GITHUB_TOKEN }}
           #run: git submodule update --init --recursive
           submodules: recursive
-        env:
-          TOKEN: ${{ secrets.JAY_PAT_TOKEN_TEST_3 }}
+          token: ${{ secrets.JAY_PAT_TOKEN_TEST_3 }}
 #      - name: Configure Git
 #        run: |
 #          git config user.name "jayanta2018"
