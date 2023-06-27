@@ -3,6 +3,9 @@ name: Build
 on:
   workflow_call:
     secrets:
+      checkout-token:
+        description: The token used for performing checkout.
+        required: false
       codeartifact-username:
         description: The username to access the codeartifact repository.
         required: false
@@ -37,13 +40,16 @@ jobs :
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout for determining submodules
+        uses: actions/checkout@v3
+
       - name: Determine Submodules
         id: check-submodules
         run: |
           if [ -f .gitmodules ]; then
-            echo "has_submodules=true" >> "$GITHUB_OUTPUT"
+            echo "has_submodules=recursive" >> $GITHUB_OUTPUT
           else
-            echo "has_submodules=false" >> "$GITHUB_OUTPUT"
+            echo "has_submodules=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout
@@ -51,8 +57,7 @@ jobs :
         with:
           fetch-depth: 0
           submodules: ${{ steps.check-submodules.outputs.has_submodules }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+          token: ${{ secrets.checkout-token ||  secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0

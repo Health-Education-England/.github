@@ -36,8 +36,6 @@ jobs:
     name: Analyse PR
     needs: validate-wrapper
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout for determining submodules
@@ -58,33 +56,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
-
         with:
           fetch-depth: 0
           remote: true
-#          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          #run: git submodule update --init --recursive
           submodules: ${{ steps.check-submodules.outputs.has_submodules }}
-          token: ${{ secrets.checkout-token }}
-#      - name: Configure Git
-#        run: |
-#          git config user.name "jayanta2018"
-#          git config user.email "jayanta.saha@hee.nhs.uk"
-#
-#      - name: Initialize submodules
-#        run: git submodule init
-#
-#      - name: Update submodules
-#        run: git submodule update --remote
-
-#      - name: Set up Git credentials
-#        run: git config --global credential.helper store
-#
-#      - name: Update submodules
-#        run: |
-#          git submodule update --init --recursive
-#          git submodule foreach 'git pull origin main'
+          token: ${{ secrets.checkout-token ||  secrets.GITHUB_TOKEN  }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0
