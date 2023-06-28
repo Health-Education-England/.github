@@ -47,17 +47,17 @@ jobs :
         id: check-submodules
         run: |
           if [ -f .gitmodules ]; then
-            echo "has_submodules=recursive" >> $GITHUB_OUTPUT
+            echo "submodule_checkout_strategy=recursive" >> $GITHUB_OUTPUT
           else
-            echo "has_submodules=false" >> $GITHUB_OUTPUT
+            echo "submodule_checkout_strategy=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          submodules: ${{ steps.check-submodules.outputs.has_submodules }}
-          token: ${{ secrets.checkout-token ||  secrets.GITHUB_TOKEN }}
+          submodules: ${{ steps.check-submodules.outputs.submodule_checkout_strategy }}
+          token: ${{ secrets.checkout-token ||  github.token }}
 
       - name: Set up JDK
         uses: actions/setup-java@v3.10.0
