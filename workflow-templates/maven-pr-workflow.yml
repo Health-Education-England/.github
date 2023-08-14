@@ -1,5 +1,9 @@
 name: PR Analysis Workflow
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   pull_request:
   workflow_dispatch:
