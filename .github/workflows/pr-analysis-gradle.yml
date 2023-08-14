@@ -81,9 +81,8 @@ jobs:
         if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.codeartifact-username }}
-          aws-secret-access-key: ${{ secrets.codeartifact-password }}
           aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::430723991443:role/github-actions-deployer-role
 
       - name: Add CodeArtifact env var
         if: steps.check-codeartifact-secrets.outputs.do-codeartifact-login == 'true'
