@@ -26,10 +26,10 @@ on:
         required: false
       ecr-username:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
       ecr-password:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
 
 jobs :
   deploy:

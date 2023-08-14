@@ -18,10 +18,10 @@ on:
         required: false
       ecr-username:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
       ecr-password:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
