@@ -15,6 +15,4 @@ jobs:
     secrets:
       codeartifact-username: ${{ secrets.AWS_MAVEN_USERNAME }}
       codeartifact-password: ${{ secrets.AWS_MAVEN_PASSWORD }}
-      ecr-username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      ecr-password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       sonar-token: ${{ secrets.SONAR_TOKEN }}

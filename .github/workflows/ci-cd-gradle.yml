@@ -21,10 +21,10 @@ on:
         required: false
       ecr-username:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
       ecr-password:
         description: The username to access the elastic container registry.
-        required: true
+        required: false
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
@@ -35,8 +35,6 @@ jobs :
     secrets:
       codeartifact-username: ${{ secrets.codeartifact-username }}
       codeartifact-password: ${{ secrets.codeartifact-password }}
-      ecr-username: ${{ secrets.ecr-username }}
-      ecr-password: ${{ secrets.ecr-password }}
       sonar-token: ${{ secrets.sonar-token }}
 
 
@@ -47,9 +45,6 @@ jobs :
       cluster-prefix: ${{ inputs.cluster-prefix }}
       environment: preprod
       service-name: ${{ inputs.service-name}}
-    secrets:
-      ecr-username: ${{ secrets.ecr-username }}
-      ecr-password: ${{ secrets.ecr-password }}
 
   deploy-prod:
     needs: deploy-preprod
@@ -58,6 +53,3 @@ jobs :
       cluster-prefix: ${{ inputs.cluster-prefix }}
       environment: prod
       service-name: ${{ inputs.service-name}}
-    secrets:
-      ecr-username: ${{ secrets.ecr-username }}
-      ecr-password: ${{ secrets.ecr-password }}
