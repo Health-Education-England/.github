@@ -12,6 +12,10 @@ on:
         required: false
         default: ${{ github.event.repository.name }}
         type: string
+      use-codeartifact:
+        description: Whether code artifact should be used to perform the build.
+        required: false
+        type: boolean
     secrets:
       codeartifact-username:
         description: The username to access the codeartifact repository.
@@ -32,9 +36,9 @@ on:
 jobs :
   build:
     uses: ./.github/workflows/build-gradle.yml
+    with:
+      use-codeartifact: ${{ inputs.use-codeartifact }}
     secrets:
-      codeartifact-username: ${{ secrets.codeartifact-username }}
-      codeartifact-password: ${{ secrets.codeartifact-password }}
       sonar-token: ${{ secrets.sonar-token }}
 
 
