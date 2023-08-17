@@ -17,18 +17,6 @@ on:
         required: false
         type: boolean
     secrets:
-      codeartifact-username:
-        description: The username to access the codeartifact repository.
-        required: false
-      codeartifact-password:
-        description: The password to access the codeartifact repository.
-        required: false
-      ecr-username:
-        description: The username to access the elastic container registry.
-        required: false
-      ecr-password:
-        description: The username to access the elastic container registry.
-        required: false
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true

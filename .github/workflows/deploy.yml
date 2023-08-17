@@ -24,12 +24,6 @@ on:
       checkout-token:
         description: The token used for performing checkout.
         required: false
-      ecr-username:
-        description: The username to access the elastic container registry.
-        required: false
-      ecr-password:
-        description: The username to access the elastic container registry.
-        required: false
 
 jobs :
   deploy:
