@@ -4,6 +4,12 @@
 
 ### AWS
 
+These permissions are required for the Maven tests in generic-upload:
+
+ - `s3:ListBucket`
+ - `s3:GetObject`
+ - `s3:PutObject`
+
 #### CodeArtifact (Optional)
 
 These permissions are required if `use-codeartifact` is `true`.
@@ -18,6 +24,12 @@ These permissions are required if `use-codeartifact` is `true`.
 
 ### AWS
 
+These permissions are required for the Maven tests in generic-upload:
+
+ - `s3:ListBucket`
+ - `s3:GetObject`
+ - `s3:PutObject`
+ 
 #### CodeArtifact (Optional)
 
 These permissions are required if `use-codeartifact` is `true`.
