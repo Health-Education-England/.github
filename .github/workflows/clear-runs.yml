@@ -23,7 +23,7 @@ jobs:
                repo: context.repo.repo
             })
             console.log("Get CI/CD workflow response = ", response.data);
-            const cicdWorkflows = response.data.workflows.filter((workflow) => workflow.name === "CI/CD");
+            const cicdWorkflows = response.data.workflows.filter((workflow) => (workflow.name === "${{ github.workflow }}"));
             console.log("CI/CD workflow ID = ", cicdWorkflows[0].id);
             return cicdWorkflows[0].id;
 
@@ -52,6 +52,7 @@ jobs:
     name: Reject outdated runs
     needs: get-previous-runs
     runs-on: ubuntu-latest
+    if: ${{ needs.get-previous-runs.outputs.run_ids != '[]' }}
     strategy:
       matrix:
         run_id: ${{ fromJSON(needs.get-previous-runs.outputs.run_ids) }}
