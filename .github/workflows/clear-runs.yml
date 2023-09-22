@@ -1,11 +1,6 @@
 name: Clear outdated runs
 
-on:
-  workflow_call:
-    secrets:
-      github-token:
-        description: The token needed for the reject outdated runs endpoint.
-        required: true
+on: workflow_call
 
 jobs:
   get-previous-runs:
@@ -76,7 +71,7 @@ jobs:
       - name: Reject previous workflow runs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.github-token }}
+          github-token: ${{ secrets.MACHINE_TOKEN }}
           script: |
             github.rest.actions.reviewPendingDeploymentsForRun({
                owner: context.repo.owner,

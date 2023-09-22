@@ -40,8 +40,6 @@ jobs:
   clear-outdated-runs:
     needs: deploy-preprod
     uses: ./.github/workflows/clear-runs.yml
-    secrets:
-      github-token: ${{ secrets.MACHINE_TOKEN }}
 
   deploy-prod:
     needs: deploy-preprod
