@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get CI/CD workflow
-        id: get-cicd-workflow
+      - name: Get current workflow id
+        id: get-workflow-id
         uses: actions/github-script@v6
         with:
           script: |
@@ -22,10 +22,10 @@ jobs:
                owner: context.repo.owner,
                repo: context.repo.repo
             })
-            console.log("Get CI/CD workflow response = ", response.data);
-            const cicdWorkflows = response.data.workflows.filter((workflow) => (workflow.name === "${{ github.workflow }}"));
-            console.log("CI/CD workflow ID = ", cicdWorkflows[0].id);
-            return cicdWorkflows[0].id;
+            console.log("Get all workflows response = ", response.data);
+            const workflows = response.data.workflows.filter((workflow) => (workflow.name === "${{ github.workflow }}"));
+            console.log("Current workflow ID = ", workflows[0].id);
+            return workflows[0].id;
 
       - name: Get pervious waiting workflow runs
         id: get-waiting-runs
@@ -35,7 +35,7 @@ jobs:
             const response = await github.rest.actions.listWorkflowRuns({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               workflow_id: ${{ steps.get-cicd-workflow.outputs.result }},
+               workflow_id: ${{ steps.get-workflow-id.outputs.result }},
                branch: "main",
                status: "waiting"
             })
