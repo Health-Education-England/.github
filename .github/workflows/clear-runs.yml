@@ -71,7 +71,7 @@ jobs:
       - name: Reject previous workflow runs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.MACHINE_TOKEN }}
+          github-token: ${{ secrets.PAT_REJECT_APPROVALS }}
           script: |
             github.rest.actions.reviewPendingDeploymentsForRun({
                owner: context.repo.owner,
