@@ -5,7 +5,6 @@ on: workflow_call
 jobs:
   get-previous-runs:
     name: Get previous runs
-    environment: prod
     runs-on: ubuntu-latest
 
     steps:

@@ -40,6 +40,8 @@ jobs:
   clear-outdated-runs:
     needs: deploy-preprod
     uses: ./.github/workflows/clear-runs.yml
+    with:
+      environment: prod
 
   deploy-prod:
     needs: deploy-preprod
