@@ -1,10 +1,17 @@
 name: Clear outdated runs
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The environment input for deployment approval.
+        required: false
+        type: string
 
 jobs:
   get-previous-runs:
     name: Get previous runs
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +29,7 @@ jobs:
             console.log("Current workflow ID = ", workflows[0].id);
             return workflows[0].id;
 
-      - name: Get pervious waiting workflow runs
+      - name: Get previous waiting workflow runs
         id: get-waiting-runs
         uses: actions/github-script@v6
         with:
@@ -31,7 +38,7 @@ jobs:
                owner: context.repo.owner,
                repo: context.repo.repo,
                workflow_id: ${{ steps.get-workflow-id.outputs.result }},
-               branch: "main",
+               branch: "${GITHUB_REF#refs/*/}",
                status: "waiting"
             })
             console.log("Get waiting runs response = ", response.data);          
