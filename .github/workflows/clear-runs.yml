@@ -1,0 +1,90 @@
+name: Clear outdated runs
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The environment input for deployment approval.
+        required: false
+        type: string
+
+jobs:
+  get-previous-runs:
+    name: Get previous runs
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get current workflow id
+        id: get-workflow-id
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const response = await github.rest.actions.listRepoWorkflows({
+               owner: context.repo.owner,
+               repo: context.repo.repo
+            })
+            console.log("Get all workflows response = ", response.data);
+            const workflows = response.data.workflows.filter((workflow) => (workflow.name === "${{ github.workflow }}"));
+            console.log("Current workflow ID = ", workflows[0].id);
+            return workflows[0].id;
+
+      - name: Get previous waiting workflow runs
+        id: get-waiting-runs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const response = await github.rest.actions.listWorkflowRuns({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               workflow_id: ${{ steps.get-workflow-id.outputs.result }},
+               branch: "${GITHUB_REF#refs/*/}",
+               status: "waiting"
+            })
+            console.log("Get waiting runs response = ", response.data);          
+            console.log("CURRENT_RUN_NUMBER = ", ${{ github.run_number }});            
+            const previousRuns = response.data.workflow_runs.filter((run) => run.run_number < ${{ github.run_number }}).map((run) => run.id);
+            console.log("Previous runs = ", previousRuns);            
+            return previousRuns;
+
+    outputs:
+      run_ids: ${{ steps.get-waiting-runs.outputs.result }}
+
+  reject-outdated-runs:
+    name: Reject outdated runs
+    needs: get-previous-runs
+    runs-on: ubuntu-latest
+    if: ${{ needs.get-previous-runs.outputs.run_ids != '[]' }}
+    strategy:
+      matrix:
+        run_id: ${{ fromJSON(needs.get-previous-runs.outputs.run_ids) }}
+
+    steps:
+      - name: Get environment IDs of the workflow run
+        id: get-env-ids
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const response = await github.rest.actions.getPendingDeploymentsForRun({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ matrix.run_id }}
+            })
+            console.log("Get environment IDs of the workflow run response = ", response.data);
+            const envIds = response.data.map((run) => run.environment.id);
+            console.log("Environment Ids = ", envIds);
+            return envIds;
+
+      - name: Reject previous workflow runs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PAT_REJECT_APPROVALS }}
+          script: |
+            github.rest.actions.reviewPendingDeploymentsForRun({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ matrix.run_id }},
+               environment_ids: ${{ steps.get-env-ids.outputs.result }},
+               state: 'rejected',
+               comment: 'superceded by workflow run #${{ github.run_number }}'
+            })

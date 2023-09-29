@@ -21,14 +21,13 @@ on:
         description: A token allowing access to SonarCloud.
         required: true
 
-jobs :
+jobs:
   build:
     uses: ./.github/workflows/build-gradle.yml
     with:
       use-codeartifact: ${{ inputs.use-codeartifact }}
     secrets:
       sonar-token: ${{ secrets.sonar-token }}
-
 
   deploy-preprod:
     needs: build
@@ -37,6 +36,12 @@ jobs :
       cluster-prefix: ${{ inputs.cluster-prefix }}
       environment: preprod
       service-name: ${{ inputs.service-name}}
+
+  clear-outdated-runs:
+    needs: deploy-preprod
+    uses: ./.github/workflows/clear-runs.yml
+    with:
+      environment: prod
 
   deploy-prod:
     needs: deploy-preprod
