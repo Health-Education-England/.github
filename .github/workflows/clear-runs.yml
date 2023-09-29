@@ -38,7 +38,7 @@ jobs:
                owner: context.repo.owner,
                repo: context.repo.repo,
                workflow_id: ${{ steps.get-workflow-id.outputs.result }},
-               branch: "${GITHUB_REF#refs/*/}",
+               branch: "${{ github.ref_name }}",
                status: "waiting"
             })
             console.log("Get waiting runs response = ", response.data);          
