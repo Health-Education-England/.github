@@ -1,10 +1,17 @@
 name: Clear outdated runs
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The environment input for deployment approval.
+        required: false
+        type: string
 
 jobs:
   get-previous-runs:
     name: Get previous runs
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
     steps:
