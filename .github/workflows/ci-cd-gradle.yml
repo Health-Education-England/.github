@@ -20,6 +20,9 @@ on:
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
+      github-token:
+        description: The token used for rejecting runs
+        required: false
 
 jobs:
   build:
@@ -42,6 +45,8 @@ jobs:
     uses: ./.github/workflows/clear-runs.yml
     with:
       environment: prod
+    secrets:
+      github-token: ${{ secrets.github-token }}
 
   deploy-prod:
     needs: deploy-preprod
