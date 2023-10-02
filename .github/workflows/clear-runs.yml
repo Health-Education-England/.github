@@ -9,7 +9,7 @@ on:
         type: string
     secrets:
       reject-pat:
-        description: The token used for rejecting runs
+        description: The Personal Access Token (PAT) used for rejecting runs.
         required: true
 
 jobs:
