@@ -7,6 +7,10 @@ on:
         description: The environment input for deployment approval.
         required: false
         type: string
+    secrets:
+      reject-pat:
+        description: The Personal Access Token (PAT) used for rejecting runs.
+        required: true
 
 jobs:
   get-previous-runs:
@@ -78,7 +82,7 @@ jobs:
       - name: Reject previous workflow runs
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.PAT_REJECT_APPROVALS }}
+          github-token: ${{ secrets.reject-pat }}
           script: |
             github.rest.actions.reviewPendingDeploymentsForRun({
                owner: context.repo.owner,
