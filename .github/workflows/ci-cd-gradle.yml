@@ -20,8 +20,8 @@ on:
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
-      github-token:
-        description: The token used for rejecting runs
+      reject-pat:
+        description: The Personal Access Token (PAT) used for rejecting runs.
         required: false
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
     with:
       environment: prod
     secrets:
-      github-token: ${{ secrets.github-token }}
+      reject-pat: ${{ secrets.reject-pat }}
 
   deploy-prod:
     needs: deploy-preprod
