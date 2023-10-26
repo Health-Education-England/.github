@@ -17,7 +17,7 @@ on:
         required: false
         type: boolean
       java-version:
-        default: 17
+        default: "17"
         description: The Java version used in the workflow.
         type: string
     secrets:
