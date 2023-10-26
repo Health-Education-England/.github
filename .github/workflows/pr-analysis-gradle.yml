@@ -40,6 +40,8 @@ jobs:
     name: Analyse PR
     needs: validate-wrapper
     runs-on: ubuntu-latest
+    env:
+      SONAR_JAVA_MIN: 17
 
     steps:
       - name: Checkout for determining submodules
@@ -90,20 +92,25 @@ jobs:
         id: changed-files
         uses: Ana06/get-changed-files@v2.2.0
 
-      - name: Check modified files
-        id: check-files
+      - name: Check if analysis steps needed
+        id: check-for-analysis
         run: |
           do_analysis=false
+          do_java_setup=false
           for changed_file in ${{ steps.changed-files.outputs.all }}; do
             if [[ $changed_file =~ ^(.*\/|)src\/.+$ ]]; then
               do_analysis=true
               break
             fi
           done
+          if [[ $do_analysis = true && ${${{ inputs.java-version }}%%.*} > $SONAR_JAVA_MIN ]]
+            do_java_setup=true
+          fi
           echo "do-analysis=$do_analysis" >> $GITHUB_OUTPUT
+          echo "do-analysis-java-setup=$do_java_setup" >> $GITHUB_OUTPUT
 
       - name: Notify skipped analysis
-        if: steps.check-files.outputs.do-analysis == 'false'
+        if: steps.check-for-analysis.outputs.do-analysis == 'false'
         uses: mshick/add-pr-comment@v2
         with:
           allow-repeats: true
@@ -111,8 +118,16 @@ jobs:
           message: |
             Quality analysis was skipped as no source changes were detected.
 
+      - name: Set up JDK for analysis
+        if: steps.check-for-analysis.outputs.do-analysis-java-setup == 'true'
+        uses: actions/setup-java@v3.10.0
+        with:
+          cache: gradle
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
       - name: Analyse quality
-        if: steps.check-files.outputs.do-analysis == 'true'
+        if: steps.check-for-analysis.outputs.do-analysis == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.sonar-token }}

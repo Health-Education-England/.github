@@ -39,6 +39,8 @@ jobs:
     name: Build
     needs: validate-wrapper
     runs-on: ubuntu-latest
+    env:
+      SONAR_JAVA_MIN: 17
 
     steps:
       - name: Checkout for determining submodules
@@ -84,11 +86,35 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Check if java setup is needed
+        id: check-java-compatibility
+        run: |
+          do_java_setup=false
+          if [[ ${${{ inputs.java-version }}%%.*} > $SONAR_JAVA_MIN ]]
+            do_java_setup=true
+          fi
+          echo "do-analysis-java-setup=$do_java_setup" >> $GITHUB_OUTPUT
+
+      - name: Set up JDK for analysis
+        if: steps.check-java-compatibility.outputs.do-analysis-java-setup == 'true'
+        uses: actions/setup-java@v3.10.0
+        with:
+          cache: gradle
+          distribution: temurin
+          java-version: ${{ env.SONAR_JAVA_MIN }}
+
       - name: Analyse quality
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.sonar-token }}
         run: ./gradlew sonarqube
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3.10.0
+        with:
+          cache: gradle
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
