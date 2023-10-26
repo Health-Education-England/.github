@@ -11,6 +11,10 @@ on:
         description: Whether code artifact should be used to perform the build.
         required: false
         type: boolean
+      java-version:
+        default: "17"
+        description: The Java version used in the workflow.
+        type: string
     secrets:
       checkout-token:
         description: The token used for performing checkout.
@@ -19,7 +23,7 @@ on:
         description: A token allowing access to SonarCloud.
         required: true
 
-jobs :
+jobs:
   validate-wrapper:
     name: Validate Gradle wrapper
     runs-on: ubuntu-latest
@@ -61,7 +65,7 @@ jobs :
         with:
           cache: gradle
           distribution: temurin
-          java-version: 17
+          java-version: ${{ inputs.java-version }}
 
       - name: Configure AWS credentials
         if: inputs.use-codeartifact
