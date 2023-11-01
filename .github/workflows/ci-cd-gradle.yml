@@ -16,6 +16,10 @@ on:
         description: Whether code artifact should be used to perform the build.
         required: false
         type: boolean
+      java-version:
+        default: "17"
+        description: The Java version used in the workflow.
+        type: string
     secrets:
       sonar-token:
         description: A token allowing access to SonarCloud.
@@ -29,6 +33,7 @@ jobs:
     uses: ./.github/workflows/build-gradle.yml
     with:
       use-codeartifact: ${{ inputs.use-codeartifact }}
+      java-version: ${{ inputs.java-version }}
     secrets:
       sonar-token: ${{ secrets.sonar-token }}
 
