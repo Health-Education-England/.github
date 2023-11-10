@@ -1,0 +1,11 @@
+name: PR Analysis
+
+on:
+  pull_request:
+    branches:
+      - $default-branch
+
+jobs:
+  analysis:
+    name: Analyse PR
+    uses: health-education-england/.github/.github/workflows/pr-analysis-common.yml@main

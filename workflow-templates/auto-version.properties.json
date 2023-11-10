@@ -1,0 +1,8 @@
+{
+  "name": "Auto Version",
+  "description": "A workflow template to perform versioning based on Conventional Commits.",
+  "categories": [
+    "continuous-integration",
+    "Automation"
+  ]
+}
