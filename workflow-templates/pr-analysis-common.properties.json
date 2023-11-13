@@ -1,0 +1,8 @@
+{
+  "name": "PR Analysis - Common",
+  "description": "A workflow template to perform common PR analysis.",
+  "categories": [
+    "code-quality",
+    "code-review"
+  ]
+}

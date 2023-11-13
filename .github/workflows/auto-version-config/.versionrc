@@ -1,0 +1,45 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "build.gradle",
+      "type": "gradle"
+    },
+    {
+      "filename": "main.tf",
+      "updater": "./terraform-version-updater.js"
+    }
+  ],
+  "issuePrefixes": [
+    "TIS21-"
+  ],
+  "types": [
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "chore",
+      "section": "Miscellaneous"
+    },
+    {
+      "type": "docs",
+      "hidden": true
+    },
+    {
+      "type": "style",
+      "hidden": true
+    },
+    {
+      "type": "refactor",
+      "hidden": true
+    },
+    {
+      "type": "test",
+      "hidden": true
+    }
+  ]
+}
