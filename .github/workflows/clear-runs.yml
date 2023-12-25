@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Get current workflow id
         id: get-workflow-id
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const response = await github.rest.actions.listRepoWorkflows({
@@ -35,7 +35,7 @@ jobs:
 
       - name: Get previous waiting workflow runs
         id: get-waiting-runs
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const response = await github.rest.actions.listWorkflowRuns({
@@ -66,7 +66,7 @@ jobs:
     steps:
       - name: Get environment IDs of the workflow run
         id: get-env-ids
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const response = await github.rest.actions.getPendingDeploymentsForRun({
@@ -80,7 +80,7 @@ jobs:
             return envIds;
 
       - name: Reject previous workflow runs
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.reject-pat }}
           script: |
