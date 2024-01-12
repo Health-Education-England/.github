@@ -32,7 +32,7 @@ jobs :
         with:
           cache: maven
           distribution: temurin
-          java-version: 11
+          java-version: 17
 
       - name: Configure AWS credentials
         if: inputs.use-codeartifact
