@@ -14,7 +14,7 @@ on:
         type: boolean
       java-version:
         default: "17"
-        description: The Java version used in the workflow.
+        description: The Java version used to build the project
         type: string
     secrets:
       checkout-token:
