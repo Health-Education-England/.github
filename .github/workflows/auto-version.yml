@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,7 +24,7 @@ jobs:
           curl $config_path/terraform-version-updater.js > terraform-version-updater.js
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v4.0.1
+        uses: actions/setup-node@v4
 
       - name: Increment version
         run: |
