@@ -48,7 +48,7 @@ jobs :
       - name: Add CodeArtifact env var
         if: inputs.use-codeartifact
         run: |
-          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
+          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 1200`
           echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
 
