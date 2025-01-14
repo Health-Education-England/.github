@@ -5,6 +5,10 @@ permissions:
 
 on:
   workflow_call:
+    secrets:
+      commit-pat:
+        description: The Personal Access Token (PAT) used for automated commits.
+        required: true
     outputs:
       new-version:
         description: The new version after being incremented, or empty if not incremented.
@@ -23,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.commit-pat }}
 
       - name: Verify version increment required
         id: verify-increment-required
