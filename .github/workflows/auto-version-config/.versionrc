@@ -5,6 +5,10 @@
       "type": "gradle"
     },
     {
+      "filename": "build.gradle.kts",
+      "type": "gradle"
+    },
+    {
       "filename": "main.tf",
       "updater": "./terraform-version-updater.js"
     }
