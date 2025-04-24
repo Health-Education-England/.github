@@ -16,6 +16,10 @@ on:
         default: "17"
         description: The Java version used to build the project
         type: string
+      publish-build-scan:
+        default: false
+        description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
+        type: boolean
     secrets:
       checkout-token:
         description: The token used for performing checkout.
@@ -25,20 +29,8 @@ on:
         required: true
 
 jobs:
-  validate-wrapper:
-    name: Validate Gradle wrapper
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Gradle wrapper validation
-        uses: gradle/actions/wrapper-validation@v3
-
   analyse:
     name: Analyse PR
-    needs: validate-wrapper
     runs-on: ubuntu-latest
 
     steps:
@@ -65,7 +57,6 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4.0.0
         with:
-          cache: gradle
           distribution: temurin
           java-version: ${{ inputs.java-version }}
 
@@ -82,6 +73,13 @@ jobs:
           CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
           echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: ${{ inputs.publish-build-scan }}
+          build-scan-terms-of-use-url: https://gradle.com/terms-of-service
+          build-scan-terms-of-use-agree: yes
 
       - name: Build
         run: ./gradlew build
