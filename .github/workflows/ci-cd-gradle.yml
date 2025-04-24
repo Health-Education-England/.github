@@ -38,7 +38,7 @@ jobs:
     with:
       use-codeartifact: ${{ inputs.use-codeartifact }}
       java-version: ${{ inputs.java-version }}
-      publish-build-scan: ${{ publish-build-scan }}
+      publish-build-scan: ${{ inputs.publish-build-scan }}
     secrets:
       sonar-token: ${{ secrets.sonar-token }}
 
