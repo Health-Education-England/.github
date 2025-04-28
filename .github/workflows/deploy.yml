@@ -74,7 +74,7 @@ jobs :
 
       - name: Deploy Amazon ECS task definition
         id: ecs-deploy
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ inputs.service-name }}
