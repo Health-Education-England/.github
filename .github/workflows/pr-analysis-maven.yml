@@ -19,6 +19,9 @@ on:
       sonar-token:
         description: A token allowing access to SonarCloud.
         required: true
+      checkout-token:
+        description: The token used for performing checkout for private repos.
+        required: false
 
 jobs :
   analyse:
@@ -30,6 +33,7 @@ jobs :
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.checkout-token ||  github.token  }}
 
       - name: Set up build JDK
         uses: actions/setup-java@v4.0.0
