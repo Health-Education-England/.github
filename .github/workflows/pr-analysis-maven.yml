@@ -39,7 +39,7 @@ jobs :
           token: ${{ secrets.checkout-token ||  github.token  }}
 
       - name: Set up build JDK
-        uses: actions/setup-java@v4.0.0
+        uses: actions/setup-java@v5
         with:
           cache: maven
           distribution: temurin
@@ -96,7 +96,7 @@ jobs :
 
       - name: Set up analysis JDK
         if: steps.check-files.outputs.do-analysis == 'true' && ${{ inputs.java-version }} < 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           cache: maven
           distribution: temurin
