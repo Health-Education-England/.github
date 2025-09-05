@@ -84,6 +84,13 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: build/reports
+
       - name: Get modified files
         id: changed-files
         uses: Ana06/get-changed-files@v2.3.0
