@@ -49,7 +49,7 @@ jobs:
 
       - name: Setup Node.js environment
         if: steps.verify-increment-required.outputs.do_increment == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
 
       - name: Increment version
         id: increment-version
