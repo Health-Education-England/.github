@@ -1,0 +1,105 @@
+name: Build
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      use-codeartifact:
+        description: Whether code artifact should be used to perform the build.
+        required: false
+        type: boolean
+      java-version:
+        default: "17"
+        description: The Java version used in the workflow.
+        type: string
+      analysis-java-version:
+        default: "17"
+        description: The Java version used for analysis.
+        type: string
+      publish-build-scan:
+        default: false
+        description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
+        type: boolean
+      ecr-repository:
+        description: ECR repository name (defaults to {repo-name})
+        required: false
+        type: string
+      artifact-modules:
+        description: Comma-separated list of modules to publish (e.g. "api,client")
+        required: false
+        type: string
+        default: "api,client"
+      project-prefix:
+        description: Project prefix for module names
+        required: false
+        type: string
+      dockerfile-path:
+        description: Path to Dockerfile (if exists, uses docker build instead of Maven)
+        required: false
+        type: string
+      artifact-path:
+        description: Path pattern for main application artifact (e.g. profile-service)
+        required: false
+        type: string
+    outputs:
+      is-maven:
+        description: Whether the project uses Maven
+        value: ${{ jobs.detect-build-tool.outputs.build-tool == 'maven' }}
+    secrets:
+      checkout-token:
+        description: The token used for performing checkout.
+        required: false
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs:
+  detect-build-tool:
+    runs-on: ubuntu-latest
+    outputs:
+      build-tool: ${{ steps.detect.outputs.build-tool }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: detect
+        run: |
+          if [ -f "pom.xml" ]; then
+            echo "build-tool=maven" >> $GITHUB_OUTPUT
+          elif [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+            echo "build-tool=gradle" >> $GITHUB_OUTPUT
+          else
+            echo "::error::No build file found"
+            exit 1
+          fi
+
+  gradle-build:
+    if: needs.detect-build-tool.outputs.build-tool == 'gradle'
+    needs: detect-build-tool
+    uses: ./.github/workflows/build-gradle.yml
+    with:
+      use-codeartifact: ${{ inputs.use-codeartifact }}
+      java-version: ${{ inputs.java-version }}
+      publish-build-scan: ${{ inputs.publish-build-scan }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
+      sonar-token: ${{ secrets.sonar-token }}
+
+  maven-build:
+    if: needs.detect-build-tool.outputs.build-tool == 'maven'
+    needs: detect-build-tool
+    uses: ./.github/workflows/build-maven.yml
+    with:
+       use-codeartifact: ${{ inputs.use-codeartifact }}
+       java-version: ${{ inputs.java-version }}
+       analysis-java-version: ${{ inputs.analysis-java-version }}
+       publish-build-scan: ${{ inputs.publish-build-scan }}
+       ecr-repository: ${{ inputs.ecr-repository }}
+       dockerfile-path: ${{ inputs.dockerfile-path }}
+       project-prefix: ${{ inputs.project-prefix }}
+       artifact-modules: ${{ inputs.artifact-modules }}
+       artifact-path: ${{ inputs.artifact-path }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
+      sonar-token: ${{ secrets.sonar-token }}

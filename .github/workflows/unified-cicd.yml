@@ -1,0 +1,121 @@
+name: Build and Deploy
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      use-codeartifact:
+        description: Whether code artifact should be used to perform the build.
+        required: false
+        type: boolean
+      java-version:
+        default: "17"
+        description: The Java version used in the workflow.
+        type: string
+      analysis-java-version:
+        default: "17"
+        description: The Java version used for analysis.
+        type: string
+      publish-build-scan:
+        default: false
+        description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
+        type: boolean
+      ecr-repository:
+        description: ECR repository name (defaults to {repo-name})
+        required: false
+        type: string
+      cluster-prefix:
+        description: Cluster prefix for deployment
+        required: false
+        type: string
+      service-name:
+        description: The name of the service being deployed, defaults to repository name.
+        required: false
+        default: ${{ github.event.repository.name }}
+        type: string
+      artifact-modules:
+        description: Comma-separated list of modules to publish (e.g. "api,client")
+        required: false
+        type: string
+        default: "api,client"
+      project-prefix:
+        description: Project prefix for module names
+        required: false
+        type: string
+      dockerfile-path:
+        description: Path to Dockerfile (if exists, uses docker build instead of Maven)
+        required: false
+        type: string
+      artifact-path:
+        description: Path pattern for main application artifact (e.g. 'profile-service')
+        required: false
+        type: string
+    secrets:
+      checkout-token:
+        description: The token used for performing checkout.
+        required: false
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+      reject-pat:
+        description: PAT for clearing outdated runs
+        required: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/unified-build.yml
+    with:
+      use-codeartifact: ${{ inputs.use-codeartifact }}
+      java-version: ${{ inputs.java-version }}
+      analysis-java-version: ${{ inputs.analysis-java-version }}
+      publish-build-scan: ${{ inputs.publish-build-scan }}
+      ecr-repository: ${{ inputs.ecr-repository }}
+      dockerfile-path: ${{ inputs.dockerfile-path }}
+      project-prefix: ${{ inputs.project-prefix }}
+      artifact-modules: ${{ inputs.artifact-modules }}
+      artifact-path: ${{ inputs.artifact-path }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
+      sonar-token: ${{ secrets.sonar-token }}
+
+  deploy-preprod:
+    needs: build
+    uses: ./.github/workflows/deploy.yml
+    with:
+      cluster-prefix: ${{ inputs.cluster-prefix }}
+      environment: preprod
+      service-name: ${{ inputs.service-name }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
+
+  clear-outdated-runs:
+    needs: deploy-preprod
+    uses: ./.github/workflows/clear-runs.yml
+    with:
+      environment: prod
+    secrets:
+      reject-pat: ${{ secrets.reject-pat }}
+
+  deploy-prod:
+    needs: deploy-preprod
+    uses: ./.github/workflows/deploy.yml
+    with:
+      cluster-prefix: ${{ inputs.cluster-prefix }}
+      environment: prod
+      service-name: ${{ inputs.service-name }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
+ 
+  deploy-nimdta:
+    if: needs.build.outputs.is-maven == 'true'
+    needs: [build, deploy-preprod]
+    uses: ./.github/workflows/deploy.yml
+    with:
+      cluster-prefix: ${{ inputs.cluster-prefix }}
+      environment: nimdta
+      service-name: ${{ inputs.service-name }}
+    secrets:
+      checkout-token: ${{ secrets.checkout-token }}
