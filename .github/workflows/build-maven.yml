@@ -1,0 +1,190 @@
+name: Build
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      use-codeartifact:
+        description: Whether code artifact should be used to perform the build.
+        required: false
+        type: boolean
+      java-version:
+        default: "17"
+        description: The Java version used in the workflow.
+        type: string
+      analysis-java-version:
+        default: "17"
+        description: The Java version used for analysis.
+        type: string
+      ecr-repository:
+        description: ECR repository name (defaults to {repo-name})
+        required: false
+        type: string
+      publish-build-scan:
+        default: false
+        description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
+        type: boolean
+      artifact-modules:
+        description: Comma-separated list of modules to publish (e.g. "api,client")
+        required: false
+        type: string
+      project-prefix:
+        description: Project prefix for module names
+        required: false
+        type: string
+      dockerfile-path:
+        description: Path to Dockerfile (if exists, uses docker build instead of Maven)
+        required: false
+        type: string
+      artifact-path:
+        description: Path pattern for main application artifact (e.g. 'profile-service)
+        required: false
+        type: string
+
+    secrets:
+      checkout-token:
+        description: The token used for performing checkout.
+        required: false
+      sonar-token:
+        description: A token allowing access to SonarCloud.
+        required: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout for determining submodules
+        uses: actions/checkout@v5
+
+      - name: Determine Submodules
+        id: check-submodules
+        run: |
+          if [ -f .gitmodules ]; then
+            echo "submodule_checkout_strategy=recursive" >> $GITHUB_OUTPUT
+          else
+            echo "submodule_checkout_strategy=false" >> $GITHUB_OUTPUT
+          fi    
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: ${{ steps.check-submodules.outputs.submodule_checkout_strategy }}
+          token: ${{ secrets.checkout-token ||  github.token }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          cache: maven
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
+      - name: Configure AWS credentials
+        if: inputs.use-codeartifact
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::430723991443:role/github-actions-deployer-role
+
+      - name: Add CodeArtifact env var
+        if: inputs.use-codeartifact
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
+          echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
+          echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+
+      - name: maven-settings-xml-action
+        if: inputs.use-codeartifact
+        uses: whelk-io/maven-settings-xml-action@v22
+        with:
+          servers: '[{ "id": "codeartifact", "username": "aws", "password": "${env.CODEARTIFACT_AUTH_TOKEN}" }]'
+          repositories: '[{ "id": "codeartifact", "url": "https://hee-430723991443.d.codeartifact.eu-west-1.amazonaws.com/maven/Health-Education-England/" }]'
+
+      - name: Build
+        run: |
+          mvn install -DskipTests
+          cp ./${{ inputs.artifact-path }}/target/*.war ./${{ inputs.artifact-path }}/target/app.jar
+
+      - name: Run tests
+        run: mvn test
+        
+      - name: Set up analysis JDK
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: actions/setup-java@v5
+        with:
+          cache: maven
+          distribution: temurin
+          java-version: ${{ inputs.analysis-java-version }}
+
+      - name: maven-settings-xml-action-for-analysis
+        if: inputs.analysis-java-version != inputs.java-version && inputs.use-codeartifact
+        uses: whelk-io/maven-settings-xml-action@v22
+        with:
+          servers: '[{ "id": "codeartifact", "username": "aws", "password": "${env.CODEARTIFACT_AUTH_TOKEN}" }]'
+          repositories: '[{ "id": "codeartifact", "url": "https://hee-430723991443.d.codeartifact.eu-west-1.amazonaws.com/maven/Health-Education-England/" }]'
+      - name: Analyse quality
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+
+      - name: Restore original JDK
+        if: inputs.analysis-java-version != inputs.java-version && !inputs.dockerfile-path
+        uses: actions/setup-java@v5
+        with:
+          cache: maven
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+      - name: Restore maven settings for original JDK
+        if: inputs.analysis-java-version != inputs.java-version && inputs.use-codeartifact && !inputs.dockerfile-path
+        uses: whelk-io/maven-settings-xml-action@v22
+        with:
+          servers: '[{ "id": "codeartifact", "username": "aws", "password": "${env.CODEARTIFACT_AUTH_TOKEN}" }]'
+          repositories: '[{ "id": "codeartifact", "url": "https://hee-430723991443.d.codeartifact.eu-west-1.amazonaws.com/maven/Health-Education-England/" }]'
+
+      - name: Publish artifacts
+        if: inputs.project-prefix
+        continue-on-error: true
+        run: |
+          IFS=',' read -ra MODULES <<< "${{ inputs.artifact-modules }}"
+          for module in "${MODULES[@]}"; do
+            for pattern in "${{ inputs.project-prefix }}-${module}" "${module}" "*-${module}"; do
+              MODULE_DIR=$(find . -maxdepth 2 -name "${pattern}" -type d | head -1)
+              if [ -n "$MODULE_DIR" ] && [ -f "$MODULE_DIR/pom.xml" ]; then
+                echo "Publishing artifact: $MODULE_DIR"
+                mvn --batch-mode deploy -DskipTests --file "$MODULE_DIR/pom.xml"
+                break
+              fi
+            done
+          done
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-2
+          role-to-assume: arn:aws:iam::430723991443:role/github-actions-deployer-role
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr-repository || github.event.repository.name }}
+        run: |
+          if [ -n "${{ inputs.dockerfile-path }}" ] && [ -f "${{ inputs.dockerfile-path }}" ]; then
+            echo "Using custom Dockerfile: ${{ inputs.dockerfile-path }}"
+            DOCKERFILE_DIR=$(dirname "${{ inputs.dockerfile-path }}")
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} -f "${{ inputs.dockerfile-path }}" "$DOCKERFILE_DIR"
+          else
+            echo "Using Spring Boot build-image"
+            mvn spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          fi
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
