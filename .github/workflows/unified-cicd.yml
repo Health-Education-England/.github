@@ -1,8 +1,10 @@
 name: Build and Deploy
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
+#   actions: read
+#   deployments: write
 
 on:
   workflow_call:
