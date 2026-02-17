@@ -1,0 +1,60 @@
+name: Docker Environment Test
+
+on:
+  push:
+    branches:
+      - test-docker
+
+jobs:
+  test-docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check Docker availability
+        run: |
+          echo "=== Docker Version ==="
+          docker --version || echo "Docker command not found"
+          
+          echo -e "\n=== Docker Info ==="
+          docker info || echo "Docker daemon not accessible"
+          
+          echo -e "\n=== Docker Socket ==="
+          ls -la /var/run/docker.sock || echo "Docker socket not found"
+          
+          echo -e "\n=== Current User ==="
+          whoami
+          id
+          
+          echo -e "\n=== Docker Group ==="
+          getent group docker || echo "Docker group not found"
+          
+      - name: Test Docker run
+        run: |
+          echo "=== Testing Docker Run ==="
+          docker run --rm hello-world || echo "Failed to run Docker container"
+          
+      - name: Test Docker pull
+        run: |
+          echo "=== Testing Docker Pull ==="
+          docker pull alpine:latest || echo "Failed to pull Docker image"
+          
+      - name: Test Testcontainers requirements
+        run: |
+          echo "=== Testing Testcontainers Requirements ==="
+          docker pull testcontainers/ryuk:0.5.1 || echo "Failed to pull Ryuk"
+          docker pull localstack/localstack:latest || echo "Failed to pull LocalStack"
+          docker pull mongo:6 || echo "Failed to pull MongoDB"
+          
+      - name: Test Docker network
+        run: |
+          echo "=== Testing Docker Network ==="
+          docker network ls
+          docker network create test-network || echo "Failed to create network"
+          docker network rm test-network || echo "Failed to remove network"
+          
+      - name: Summary
+        if: always()
+        run: |
+          echo "=== Test Summary ==="
+          echo "If all tests passed, Docker is properly configured for Testcontainers"
+          echo "If any tests failed, check the logs above for details"
