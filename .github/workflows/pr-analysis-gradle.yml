@@ -37,12 +37,6 @@ jobs:
       - name: Checkout for determining submodules
         uses: actions/checkout@v5
 
-      - name: log docker
-        run: |
-          echo "Checking Docker availability"
-          docker version
-          docker info
-
       - name: Determine Submodules
         id: check-submodules
         run: |
