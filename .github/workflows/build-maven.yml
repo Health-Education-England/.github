@@ -16,7 +16,7 @@ on:
         description: The Java version used in the workflow.
         type: string
       analysis-java-version:
-        default: "17"
+        default: "21"
         description: The Java version used for analysis.
         type: string
       ecr-repository:
