@@ -114,4 +114,4 @@ jobs :
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.sonar-token }}
-        run: mvn --batch-mode sonar:sonar
+        run: mvn --batch-mode org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
