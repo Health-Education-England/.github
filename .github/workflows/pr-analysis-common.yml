@@ -13,4 +13,4 @@ jobs:
 
     steps:
       - name: Lint commits
-        uses: wagoid/commitlint-github-action@v5.4.5
+        uses: wagoid/commitlint-github-action@v6.2.1
