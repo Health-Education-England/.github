@@ -91,7 +91,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: inputs.analysis-java-version
 
       - name: Set up Gradle for analysis
         if: inputs.analysis-java-version != inputs.java-version
@@ -116,6 +116,21 @@ jobs:
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up JDK for packaging
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: inputs.java-version
+
+      - name: Set up Gradle for packaging
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: ${{ inputs.publish-build-scan }}
+          build-scan-terms-of-use-url: https://gradle.com/terms-of-service
+          build-scan-terms-of-use-agree: yes
 
       - name: Build, tag and push image to Amazon ECR
         env:
