@@ -15,6 +15,10 @@ on:
         default: "17"
         description: The Java version used in the workflow.
         type: string
+      analysis-java-version:
+        default: "21"
+        description: The Java version used for analysis.
+        type: string
       publish-build-scan:
         default: false
         description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
@@ -82,6 +86,21 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Set up JDK for analysis
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.analysis-java-version }}
+
+      - name: Set up Gradle for analysis
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: ${{ inputs.publish-build-scan }}
+          build-scan-terms-of-use-url: https://gradle.com/terms-of-service
+          build-scan-terms-of-use-agree: yes
+
       - name: Analyse quality
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -97,6 +116,21 @@ jobs:
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up JDK for packaging
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
+      - name: Set up Gradle for packaging
+        if: inputs.analysis-java-version != inputs.java-version
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-scan-publish: ${{ inputs.publish-build-scan }}
+          build-scan-terms-of-use-url: https://gradle.com/terms-of-service
+          build-scan-terms-of-use-agree: yes
 
       - name: Build, tag and push image to Amazon ECR
         env:
