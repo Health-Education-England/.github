@@ -81,6 +81,7 @@ jobs:
     with:
       use-codeartifact: ${{ inputs.use-codeartifact }}
       java-version: ${{ inputs.java-version }}
+      analysis-java-version: ${{ inputs.analysis-java-version }}
       publish-build-scan: ${{ inputs.publish-build-scan }}
     secrets:
       checkout-token: ${{ secrets.checkout-token }}
