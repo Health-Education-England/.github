@@ -16,6 +16,7 @@ on:
         description: The Java version used in the workflow.
         type: string
       analysis-java-version:
+        default: "21"
         description: The Java version used for analysis.
         type: string
       publish-build-scan:
@@ -86,14 +87,14 @@ jobs:
         run: ./gradlew build
 
       - name: Set up JDK for analysis
-        if: (inputs.analysis-java-version || inputs.java-version) != inputs.java-version
+        if: inputs.analysis-java-version != inputs.java-version
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ inputs.analysis-java-version || inputs.java-version }}
+          java-version: ${{ inputs.analysis-java-version }}
 
       - name: Set up Gradle for analysis
-        if: (inputs.analysis-java-version || inputs.java-version) != inputs.java-version
+        if: inputs.analysis-java-version != inputs.java-version
         uses: gradle/actions/setup-gradle@v4
         with:
           build-scan-publish: ${{ inputs.publish-build-scan }}
@@ -117,14 +118,14 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up JDK for packaging
-        if: (inputs.analysis-java-version || inputs.java-version) != inputs.java-version
+        if: inputs.analysis-java-version != inputs.java-version
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ inputs.java-version }}
 
       - name: Set up Gradle for packaging
-        if: (inputs.analysis-java-version || inputs.java-version) != inputs.java-version
+        if: inputs.analysis-java-version != inputs.java-version
         uses: gradle/actions/setup-gradle@v4
         with:
           build-scan-publish: ${{ inputs.publish-build-scan }}
