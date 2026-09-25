@@ -1,0 +1,89 @@
+name: ECR Vulnerability Scan
+
+on:
+  workflow_call:
+    inputs:
+      ecr-repository:
+        description: ECR repository name (defaults to repository name)
+        required: false
+        type: string
+      image-tag:
+        description: Image tag to scan (defaults to commit SHA)
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  scan:
+    name: ECR Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-2
+          role-to-assume: arn:aws:iam::430723991443:role/github-actions-deployer-role
+
+      - name: Scan image in Amazon ECR
+        id: scan
+        continue-on-error: true
+        uses: alexjurkiewicz/ecr-scan-image@v2.0.1
+        with:
+          repository: ${{ inputs.ecr-repository || github.event.repository.name }}
+          tag: ${{ inputs.image-tag || github.sha }}
+          fail_threshold: high
+
+      - name: Publish scan findings
+        if: always()
+        env:
+          ECR_REPOSITORY: ${{ inputs.ecr-repository || github.event.repository.name }}
+          IMAGE_TAG: ${{ inputs.image-tag || github.sha }}
+        run: |
+          CRITICAL="${{ steps.scan.outputs.critical }}"
+          HIGH="${{ steps.scan.outputs.high }}"
+          MEDIUM="${{ steps.scan.outputs.medium }}"
+          LOW="${{ steps.scan.outputs.low }}"
+          INFO="${{ steps.scan.outputs.informational }}"
+          UNKNOWN="${{ steps.scan.outputs.unknown }}"
+          TOTAL="${{ steps.scan.outputs.total }}"
+          SCAN_OUTCOME="${{ steps.scan.outcome }}"
+
+          [ -n "$CRITICAL" ] || CRITICAL=0
+          [ -n "$HIGH" ] || HIGH=0
+          [ -n "$MEDIUM" ] || MEDIUM=0
+          [ -n "$LOW" ] || LOW=0
+          [ -n "$INFO" ] || INFO=0
+          [ -n "$UNKNOWN" ] || UNKNOWN=0
+          [ -n "$TOTAL" ] || TOTAL=$((CRITICAL + HIGH + MEDIUM + LOW + INFO + UNKNOWN))
+
+          if [ "$SCAN_OUTCOME" != "success" ] && [ "$TOTAL" -eq 0 ]; then
+            GATE="WARNING - Scan could not be completed (report-only)"
+            echo "::warning::ECR scan did not return findings for $ECR_REPOSITORY:$IMAGE_TAG"
+          elif [ "$((CRITICAL + HIGH))" -gt 0 ]; then
+            GATE="ATTENTION - High/Critical findings present (report-only)"
+          else
+            GATE="PASS - No High or Critical findings"
+          fi
+
+          echo "### ECR Vulnerability Scan - $ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Severity | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Critical | $CRITICAL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| High | $HIGH |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Medium | $MEDIUM |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Low | $LOW |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Informational | $INFO |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Unknown | $UNKNOWN |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Total findings:** $TOTAL" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Gate:** $GATE" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "ECR Scan Results - $ECR_REPOSITORY:$IMAGE_TAG"
+          echo "  CRITICAL=$CRITICAL  HIGH=$HIGH  MEDIUM=$MEDIUM  LOW=$LOW  INFO=$INFO  UNKNOWN=$UNKNOWN  TOTAL=$TOTAL"
+          echo "Gate: $GATE"

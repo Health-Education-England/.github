@@ -76,7 +76,13 @@ jobs:
     secrets:
       checkout-token: ${{ secrets.checkout-token }}
       sonar-token: ${{ secrets.sonar-token }}
-
+ 
+  ecr-image-scan:
+    needs: build
+    uses: ./.github/workflows/ecr-image-scan.yml
+    with:
+      ecr-repository: ${{ inputs.ecr-repository }}
+      image-tag: ${{ github.sha }}
   deploy-preprod:
     needs: build
     uses: ./.github/workflows/deploy.yml
