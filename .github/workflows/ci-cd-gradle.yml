@@ -46,7 +46,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/ecr-image-scan.yml
     with:
-      ecr-repository: ${{ inputs.service-name }}
+      ecr-repository: ${{ inputs.ecr-repository }}
       image-tag: ${{ github.sha }}
   deploy-preprod:
     needs: build
