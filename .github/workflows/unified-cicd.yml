@@ -20,7 +20,7 @@ on:
         description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
         type: boolean
       ecr-repository:
-        description: ECR repository name (defaults to {repo-name})
+        description: ECR repository name (defaults to repository name)
         required: false
         type: string
       cluster-prefix:
@@ -81,7 +81,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/ecr-image-scan.yml
     with:
-      ecr-repository: ${{ inputs.ecr-repository }}
+      ecr-repository: ${{ inputs.ecr-repository || github.event.repository.name }}
       image-tag: ${{ github.sha }}
   deploy-preprod:
     needs: build
