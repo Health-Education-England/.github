@@ -24,10 +24,6 @@ on:
         default: false
         description: Whether a Gradle Build Scan should be published to https://scans.gradle.com
         type: boolean
-      ecr-repository:
-        description: ECR repository name (defaults to repository name)
-        required: false
-        type: string
     secrets:
       sonar-token:
         description: A token allowing access to SonarCloud.
@@ -50,7 +46,7 @@ jobs:
     needs: build
     uses: ./.github/workflows/ecr-image-scan.yml
     with:
-      ecr-repository: ${{ inputs.ecr-repository || github.event.repository.name }}
+      ecr-repository: ${{ github.event.repository.name }}
       image-tag: ${{ github.sha }}
   deploy-preprod:
     needs: build
