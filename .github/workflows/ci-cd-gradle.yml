@@ -42,6 +42,12 @@ jobs:
     secrets:
       sonar-token: ${{ secrets.sonar-token }}
 
+  ecr-image-scan:
+    needs: build
+    uses: ./.github/workflows/ecr-image-scan.yml
+    with:
+      ecr-repository: ${{ github.event.repository.name }}
+      image-tag: ${{ github.sha }}
   deploy-preprod:
     needs: build
     uses: ./.github/workflows/deploy.yml
