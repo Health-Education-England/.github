@@ -20,6 +20,11 @@ on:
         required: false
         default: ${{ github.event.repository.name }}
         type: string
+      require-default-branch:
+        description: Whether to refuse to deploy a commit which is not on the default branch.
+        required: false
+        default: true
+        type: boolean
     secrets:
       checkout-token:
         description: The token used for performing checkout.
@@ -50,6 +55,20 @@ jobs :
           fetch-depth: 0
           submodules: ${{ steps.check-submodules.outputs.submodule_checkout_strategy }}
           token: ${{ secrets.checkout-token ||  github.token }}
+
+      - name: Check the commit is on the default branch
+        if: inputs.require-default-branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "+refs/heads/$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH"
+          if git merge-base --is-ancestor "$GITHUB_SHA" "refs/remotes/origin/$DEFAULT_BRANCH"; then
+            echo "$GITHUB_SHA is on $DEFAULT_BRANCH, continuing."
+          else
+            echo "::error title=Deployment refused::$GITHUB_SHA ($GITHUB_REF) is not on $DEFAULT_BRANCH. This workflow deploys the ref it is called from, so it may only deploy a commit which has been merged. Deploy $DEFAULT_BRANCH instead, or pass require-default-branch: false for a deliberate off-branch deployment."
+            exit 1
+          fi
 
       - name: Create task definition
         run: sed -e 's/${environment}/${{ inputs.environment }}/g' -e 's/${service-name}/${{ inputs.service-name }}/g' .aws/task-definition-template.json > ${{ runner.temp }}/task-definition.json
