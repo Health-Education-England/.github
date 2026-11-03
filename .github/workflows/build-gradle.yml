@@ -72,9 +72,9 @@ jobs:
       - name: Add CodeArtifact env var
         if: inputs.use-codeartifact
         run: |
-          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900`
-          echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain hee --domain-owner 430723991443 --query authorizationToken --output text --duration-seconds 900)
           echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> "$GITHUB_ENV"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
