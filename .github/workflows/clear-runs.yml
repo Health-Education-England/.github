@@ -16,7 +16,7 @@ jobs:
   get-previous-runs:
     name: Get previous runs
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Get current workflow id
@@ -57,7 +57,7 @@ jobs:
   reject-outdated-runs:
     name: Reject outdated runs
     needs: get-previous-runs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ needs.get-previous-runs.outputs.run_ids != '[]' }}
     strategy:
       matrix:
