@@ -31,10 +31,6 @@ on:
 jobs:
   analyse:
     name: Analyse PR
-    # Pinned to 24.04 (Docker 28) as ubuntu-latest has moved to 26.04, which ships Docker
-    # Engine 29. Docker 29 requires API version 1.44+, but Testcontainers falls back to 1.32,
-    # so container-based tests fail to detect Docker. Unpin once services are on
-    # Testcontainers 1.21.4+.
     runs-on: ubuntu-24.04
 
     steps:
