@@ -58,7 +58,7 @@ on:
 
 jobs:
   detect-build-tool:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       build-tool: ${{ steps.detect.outputs.build-tool }}
     steps:
