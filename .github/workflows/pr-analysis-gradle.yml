@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout for determining submodules
-        uses: actions/checkout@v5.1.0
+        uses: actions/checkout@v7.0.1
 
       - name: Determine Submodules
         id: check-submodules
@@ -47,7 +47,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v5.1.0
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           remote: true
