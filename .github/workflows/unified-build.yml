@@ -62,7 +62,7 @@ jobs:
     outputs:
       build-tool: ${{ steps.detect.outputs.build-tool }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
       - id: detect
         run: |
           if [ -f "pom.xml" ]; then
